@@ -401,7 +401,7 @@ export function Mapbox({ mapboxToken }: MapboxProps) {
 
             try {
               // Save to MongoDB
-              await fetch("/api/save-coordinates", {
+              const response = await fetch("/api/save-coordinates", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
@@ -410,6 +410,17 @@ export function Mapbox({ mapboxToken }: MapboxProps) {
                   coordinates: [point.lat, point.lng],
                 }),
               });
+
+              if (!response.ok) {
+                const errorData = await response.json();
+                console.error("API Error:", errorData);
+                throw new Error(
+                  `API failed: ${errorData.error || response.statusText}`
+                );
+              }
+
+              const result = await response.json();
+              console.log("Store saved successfully:", result);
 
               // Update map visualization
               const source = currentMap.getSource(
@@ -458,6 +469,12 @@ export function Mapbox({ mapboxToken }: MapboxProps) {
               }
             } catch (error) {
               console.error("Error handling drop:", error);
+              // Show user-friendly error message
+              alert(
+                `Failed to add store: ${
+                  error instanceof Error ? error.message : "Unknown error"
+                }`
+              );
             }
           };
 
